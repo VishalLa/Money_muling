@@ -554,6 +554,66 @@
 
     </div>
 
+    <!-- ── Backend Model Evaluation Metrics (from evaluate_model) ── -->
+    <template v-if="store.evalMetrics">
+      <div class="section-divider">
+        <span class="section-label">Backend Model Evaluation</span>
+        <span class="section-sub">Computed against ground-truth is_fraud labels in your CSV</span>
+      </div>
+      <div class="charts-row">
+
+        <!-- Metric cards -->
+        <div class="chart-card">
+          <div class="card-header">
+            <span class="card-title">Evaluation Summary</span>
+            <span class="card-sub">From sklearn — optimal threshold applied</span>
+          </div>
+          <div class="beval-cards">
+            <div class="beval-card" v-for="m in backendMetricCards" :key="m.label">
+              <div class="beval-label">{{ m.label }}</div>
+              <div class="beval-value mono" :style="{ color: m.color }">{{ m.display }}</div>
+              <div class="beval-track">
+                <div class="beval-fill" :style="{ width: m.pct + '%', background: m.color }" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full metrics table -->
+        <div class="chart-card">
+          <div class="card-header">
+            <span class="card-title">Metrics Table</span>
+            <span class="card-sub">All values from evaluate_model()</span>
+          </div>
+          <div class="metrics-table-wrap">
+            <table class="metrics-table">
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>Value</th>
+                  <th>Interpretation</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in backendMetricRows" :key="row.key">
+                  <td class="metric-name">{{ row.label }}</td>
+                  <td class="metric-value mono" :style="{ color: row.color }">{{ row.display }}</td>
+                  <td class="metric-formula">{{ row.interp }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </template>
+
+    <!-- shown when no is_fraud column present -->
+    <div v-else-if="store.rings.length" class="beval-absent">
+      <span>💡</span>
+      <span>Add an <code>is_fraud</code> column to your CSV to unlock ground-truth model evaluation metrics.</span>
+    </div>
+
   </div>
 </template>
 
@@ -958,6 +1018,52 @@ const scatterPoints = computed(() =>
     ringId:  r['Ring ID']
   }))
 )
+
+// ── Backend eval metrics (from evaluate_model in engine.py) ──────────
+const BACKEND_METRIC_META = {
+  precision:         { label: 'Precision',          interp: 'Of flagged accounts, how many are truly fraudulent' },
+  recall:            { label: 'Recall',              interp: 'Of all fraudulent accounts, how many were caught'   },
+  f1_score:          { label: 'F1 Score',            interp: 'Harmonic mean of Precision & Recall'               },
+  accuracy:          { label: 'Accuracy',            interp: 'Overall fraction of correct predictions'           },
+  optimal_threshold: { label: 'Optimal Threshold',   interp: 'Best score cutoff found via Precision-Recall curve' },
+}
+
+function bevalColor(key, val) {
+  if (key === 'optimal_threshold') return '#c084fc'
+  if (val >= 0.8) return '#22c55e'
+  if (val >= 0.6) return '#eab308'
+  if (val >= 0.4) return '#f97316'
+  return '#ef4444'
+}
+
+function bevalDisplay(key, val) {
+  if (key === 'optimal_threshold') return val.toFixed(2)
+  return (val * 100).toFixed(2) + '%'
+}
+
+const backendMetricCards = computed(() => {
+  if (!store.evalMetrics) return []
+  return Object.entries(store.evalMetrics).map(([key, val]) => {
+    const meta  = BACKEND_METRIC_META[key] ?? { label: key, interp: '' }
+    const color = bevalColor(key, val)
+    const pct   = key === 'optimal_threshold' ? (val / 100) * 100 : val * 100
+    return { label: meta.label, display: bevalDisplay(key, val), color, pct }
+  })
+})
+
+const backendMetricRows = computed(() => {
+  if (!store.evalMetrics) return []
+  return Object.entries(store.evalMetrics).map(([key, val]) => {
+    const meta = BACKEND_METRIC_META[key] ?? { label: key, interp: '—' }
+    return {
+      key,
+      label:   meta.label,
+      display: bevalDisplay(key, val),
+      color:   bevalColor(key, val),
+      interp:  meta.interp,
+    }
+  })
+})
 </script>
 
 <style scoped>
@@ -1152,8 +1258,37 @@ const scatterPoints = computed(() =>
 .pcls-mv { font-size:10px; min-width:36px; text-align:right; }
 
 
+/* ── Backend eval metric cards ── */
+.beval-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.beval-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.beval-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+.beval-value { font-size: 22px; font-weight: 700; }
+.beval-track { height: 3px; background: rgba(255,255,255,.06); border-radius: 2px; overflow: hidden; margin-top: 2px; }
+.beval-fill  { height: 100%; border-radius: 2px; transition: width .5s ease; }
+
+/* ── Absent notice ── */
+.beval-absent {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(124,58,237,.06); border: 1px solid rgba(124,58,237,.15);
+  border-radius: 12px; padding: 14px 18px; font-size: 13px; color: var(--muted);
+}
+.beval-absent code {
+  background: rgba(124,58,237,.15); padding: 1px 6px; border-radius: 4px;
+  font-family: var(--font-mono); font-size: 12px; color: var(--accent);
+}
+
 @media(max-width:640px){
   .charts-row { grid-template-columns:1fr; }
   .pie-wrap   { flex-direction:column; align-items:center; }
+  .eval-cards-row { grid-template-columns: repeat(2, 1fr); }
+  .cm-grid { grid-template-columns: 60px 1fr 1fr; }
 }
 </style>

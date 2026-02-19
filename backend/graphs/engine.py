@@ -20,6 +20,20 @@ def normalize_array(arr: np.ndarray) -> np.ndarray:
     return arr / max_val if max_val > 0 else np.zeros_like(arr)
 
 
+def _risk_level(score: float) -> str:
+    if score >= 70:  return "HIGH"
+    if score >= 40:  return "MED"
+    return "LOW"
+
+
+_PATTERN_CLEAN = {
+    "cycle_length_3": "cycle",
+    "fan_in":         "fan_in",
+    "fan_out":        "fan_out",
+    "layered_shell":  "layered_shell",
+    "cycle":          "cycle",
+}
+
 class MainEngine:
     def __init__(self, graph: Graph) -> None:
         self.graph = graph
@@ -349,10 +363,58 @@ class MainEngine:
         }
 
         return metrics, best_threshold
+    
 
-    # ─────────────────────────────────────────────────────────────────
-    # 8. FULL PIPELINE
-    # ─────────────────────────────────────────────────────────────────
+    def _build_reasons(
+        self,
+        acc:      str,
+        score:    float,
+        meta:     dict,
+        smurfing: list,
+    ) -> list[str]:
+        reasons = []
+        G       = self._sg
+
+        total_tx = int(
+            self._s_count.get(acc, 0) + self._r_count.get(acc, 0)
+        )
+
+        # Activity gate
+        penalty = 0.2 if total_tx < 5 else 0.0
+        if penalty:
+            reasons.append(f"activity_gate(total_tx={total_tx},penalty={penalty})")
+
+        patterns = meta.get("patterns", set())
+
+        # Cycle centrality
+        if "cycle_length_3" in patterns or "cycle" in patterns:
+            deg  = G.degree(acc)
+            # count how many cycles this node appears in (approx via neighbours)
+            size = deg + 1
+            reasons.append(f"cycle_centrality(deg={deg},size={size})")
+
+        # Fan-in intensity
+        if "fan_in" in patterns:
+            in_d = G.in_degree(acc)
+            reasons.append(f"fan_in_intensity(in={in_d})")
+
+        # Fan-out intensity
+        if "fan_out" in patterns:
+            out_d = G.out_degree(acc)
+            reasons.append(f"fan_out_intensity(out={out_d})")
+
+        # Layered shell
+        if "layered_shell" in patterns:
+            reasons.append("layered_shell_member")
+
+        # Low activity cap
+        if total_tx < 5:
+            cap = round(score, 1)
+            reasons.append(f"low_activity_cap(total_tx={total_tx},score_cap={cap})")
+
+        return reasons
+
+
     def run_full_pipeline(self) -> dict:
         t0 = time.perf_counter()
 
@@ -362,6 +424,8 @@ class MainEngine:
         scores    = self.compute_scores(cycles, smurfing, shells)
         threshold = self.adaptive_threshold(scores)
         rings     = self.build_fraud_rings(cycles, smurfing, shells, scores)
+        metrics, best_threshold = self.evaluate_model(scores=scores)
+
 
         account_meta: dict = defaultdict(lambda: {"patterns": set(), "ring_id": None})
         for c  in cycles:   [account_meta[a]["patterns"].add(c["pattern"])  for a in c["accounts"]]
@@ -369,30 +433,37 @@ class MainEngine:
         for sh in shells:   [account_meta[a]["patterns"].add(sh["pattern"]) for a in sh["accounts"]]
         for r  in rings:    [account_meta[a].__setitem__("ring_id", r["ring_id"]) for a in r["member_accounts"]]
 
-        suspicious = [
-            {
+        suspicious = []
+        for acc, score in scores.items():
+            if score < threshold:
+                continue
+            meta     = account_meta[acc]
+            patterns = meta["patterns"]
+            reasons  = self._build_reasons(acc, score, meta, smurfing)
+
+            suspicious.append({
                 "account_id":        acc,
                 "suspicion_score":   score,
-                "detected_patterns": list(account_meta[acc]["patterns"]),
-                "ring_id":           account_meta[acc]["ring_id"]
-            }
-            for acc, score in scores.items()
-            if score >= threshold
-        ]
+                "risk_level":        _risk_level(score),   # ← added
+                "reasons":           reasons,               # ← added
+                "detected_patterns": [_PATTERN_CLEAN.get(p, p) for p in patterns],
+                "ring_id":           meta["ring_id"],
+            })
+
 
         # ── evaluate model if ground truth available ──
         eval_metrics, _ = self.evaluate_model(scores)
 
         return {
-            "suspicious_accounts":  suspicious,
-            "fraud_rings":          rings,
-            "account_scores":       scores,
-            "eval_metrics":         eval_metrics,
+            "suspicious_accounts": suspicious,
+            "fraud_rings":         rings,
+            "account_scores":      scores,
+            "eval_metrics":        metrics,      # ← None if no is_fraud column
             "summary": {
                 "total_accounts_analyzed":     len(self._accounts),
                 "suspicious_accounts_flagged": len(suspicious),
                 "fraud_rings_detected":        len(rings),
-                "processing_time_seconds":     round(time.perf_counter() - t0, 3)
+                "processing_time_seconds":     round(time.perf_counter() - t0, 3),
             }
         }
     
