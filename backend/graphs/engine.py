@@ -6,6 +6,13 @@ from collections import defaultdict, deque
 import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
+from sklearn.metrics import (
+    precision_recall_curve,
+    precision_score,
+    recall_score,
+    f1_score,
+    accuracy_score,
+)
 
 
 def normalize_array(arr: np.ndarray) -> np.ndarray:
@@ -306,6 +313,42 @@ class MainEngine:
             .sort_values("Risk Score", ascending=False)
             .reset_index(drop=True)
         )
+    
+
+    def evaluate_model(self, scores: dict):
+        if "is_fraud" not in self._df.columns:
+            return None, None
+
+        actual = (
+            self._df.groupby("sender_id")["is_fraud"]
+            .max()
+            .reindex(self._accounts, fill_value=0)
+            .values
+        )
+
+        score_values = np.array([scores[a] for a in self._accounts])
+
+        # Find optimal threshold via PR curve
+        precision_arr, recall_arr, thresholds = precision_recall_curve(actual, score_values)
+
+        f1_scores  = 2 * (precision_arr * recall_arr) / (precision_arr + recall_arr + 1e-8)
+        best_idx   = int(np.argmax(f1_scores))
+
+        # thresholds has one fewer element than precision/recall arrays
+        best_threshold = float(thresholds[best_idx]) if best_idx < len(thresholds) else 50.0
+
+        # Apply threshold to get binary predictions
+        predicted = (score_values >= best_threshold).astype(int)
+
+        metrics = {
+            "precision":          round(precision_score(actual, predicted, zero_division=0), 4),
+            "recall":             round(recall_score(actual, predicted, zero_division=0),    4),
+            "f1_score":           round(f1_score(actual, predicted, zero_division=0),        4),
+            "accuracy":           round(accuracy_score(actual, predicted),                   4),
+            "optimal_threshold":  round(best_threshold, 2),
+        }
+
+        return metrics, best_threshold
 
     # ─────────────────────────────────────────────────────────────────
     # 8. FULL PIPELINE
@@ -313,14 +356,13 @@ class MainEngine:
     def run_full_pipeline(self) -> dict:
         t0 = time.perf_counter()
 
-        cycles   = self.detect_cycles()
-        smurfing = self.detect_smurfing()
-        shells   = self.detect_layered_shells()
-        scores   = self.compute_scores(cycles, smurfing, shells)
+        cycles    = self.detect_cycles()
+        smurfing  = self.detect_smurfing()
+        shells    = self.detect_layered_shells()
+        scores    = self.compute_scores(cycles, smurfing, shells)
         threshold = self.adaptive_threshold(scores)
-        rings    = self.build_fraud_rings(cycles, smurfing, shells, scores)
+        rings     = self.build_fraud_rings(cycles, smurfing, shells, scores)
 
-        # Build account metadata in one pass
         account_meta: dict = defaultdict(lambda: {"patterns": set(), "ring_id": None})
         for c  in cycles:   [account_meta[a]["patterns"].add(c["pattern"])  for a in c["accounts"]]
         for s  in smurfing:  account_meta[s["account"]]["patterns"].add(s["pattern"])
@@ -338,10 +380,14 @@ class MainEngine:
             if score >= threshold
         ]
 
+        # ── evaluate model if ground truth available ──
+        eval_metrics, _ = self.evaluate_model(scores)
+
         return {
             "suspicious_accounts":  suspicious,
             "fraud_rings":          rings,
             "account_scores":       scores,
+            "eval_metrics":         eval_metrics,
             "summary": {
                 "total_accounts_analyzed":     len(self._accounts),
                 "suspicious_accounts_flagged": len(suspicious),
@@ -349,5 +395,4 @@ class MainEngine:
                 "processing_time_seconds":     round(time.perf_counter() - t0, 3)
             }
         }
-    
     

@@ -17,9 +17,8 @@ async def get_files(files: List[UploadFile]):
 
     out_dict = await detect.handle_files(files=files)
 
-    out_dataframe = await detect.run_detction_pipeline(input_dict=out_dict)
-
-    return out_dataframe
+    report = await detect.run_detction_pipeline(input_dict=out_dict)
+    return report
 
 @route.get(
     "/show/output/files",
