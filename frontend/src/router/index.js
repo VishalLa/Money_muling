@@ -1,0 +1,15 @@
+import { createRouter, createWebHistory } from 'vue-router'
+import HomeView    from '@/views/HomeView.vue'
+import SummaryView from '@/views/SummaryView.vue'
+import GraphView   from '@/views/GraphView.vue'
+import ChartsView  from '@/views/ChartsView.vue'
+
+export default createRouter({
+  history: createWebHistory(),
+  routes: [
+    { path: '/',        name: 'home',    component: HomeView    },
+    { path: '/summary', name: 'summary', component: SummaryView },
+    { path: '/graph',   name: 'graph',   component: GraphView   },
+    { path: '/charts',  name: 'charts',  component: ChartsView  }
+  ]
+})
