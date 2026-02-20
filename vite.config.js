@@ -12,20 +12,10 @@ export default defineConfig(({ command }) => ({
   server: {
     port: 5173,
     proxy: {
-      '/input': 'http://localhost:8000',
-      '/show':  'http://localhost:8000',
-      '/download': 'http://localhost:8000'
+      '/input': 'https://money-muling-jtzq.onrender.com/',
+      '/show':  'https://money-muling-jtzq.onrender.com/',
+      '/download': 'https://money-muling-jtzq.onrender.com/'
     }
   },
-<<<<<<< HEAD
-  base: command === 'build' ? "/Money_muling/" : "/",
-  build: {
-    rollupOptions: {
-      input: fileURLToPath(new URL('./index.html', import.meta.url))
-    }
-  }
-}))
-=======
   base: command === 'build' ? "/Money_muling/" : "/"
 }))
->>>>>>> 8cf47b6849c1d335e34e7017bd9ed48e8894de07
