@@ -1,0 +1,16 @@
+/myenv
+myenv/
+.venv/
+/.venv
+/__pycache__
+__pycache__/
+*.env
+/node_modules
+node_modules/
+/random
+random/
+
+test.py
+*.idea
+*.log
+debug.log
