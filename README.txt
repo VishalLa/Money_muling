@@ -1,176 +1,311 @@
 ---
 
-# 🎯 Slide 1 – Title Slide
+#  Money Muling Detection System
 
-## **Money Muling Detection System**
+### Graph-Based Suspicious Transaction Detection using FastAPI & Network Analysis
 
-Graph-Based Financial Crime Detection
+The **Money Muling Detection System** is a backend-driven analytical platform designed to identify suspicious financial transaction behavior that may indicate **money muling activity**.
+The system analyzes transaction records uploaded as CSV files and uses graph-based modeling, statistical analysis, and risk scoring techniques to detect potentially fraudulent accounts.
 
-**Include:**
+The project provides a complete pipeline including:
 
-* Your Name: Vishal Ladoiya
-* Technology: FastAPI + NetworkX + Vue.js
-* Submission / Course Name
-
----
-
-# 🧱 Slide 2 – System Overview (High-Level Flow Diagram)
-
-### Use: Horizontal Process Flow Diagram
-
-Draw this:
-
-```
-[ CSV Upload ]
-        ↓
-[ Data Processing ]
-        ↓
-[ Graph Construction ]
-        ↓
-[ Risk Scoring ]
-        ↓
-[ Suspicious Account Detection ]
-```
-
-### Short Description Under Diagram:
-
-* Upload transaction data
-* Convert transactions into graph
-* Analyze fund flow patterns
-* Score accounts based on risk
-* Output suspicious accounts
+* File upload interface (Frontend)
+* API processing (FastAPI backend)
+* Transaction graph generation
+* Risk scoring
+* Suspicious pattern detection
 
 ---
 
-# 🏗 Slide 3 – System Architecture Diagram
+##  What is Money Muling?
 
-### Use: Layered Architecture Diagram
+Money muling is a financial crime in which an individual transfers illegally obtained money between accounts to obscure the origin of funds. Criminal networks typically use multiple intermediary accounts (mules) to:
 
-Draw this:
+* Break traceability
+* Launder stolen money
+* Move funds quickly across accounts
+
+Detecting such activity requires **relationship-based analysis**, not just simple transaction monitoring.
+Therefore this project uses **graph/network analysis** instead of traditional rule-based detection.
+
+---
+
+## 🎯 Project Objectives
+
+The goal of this system is to:
+
+* Automatically process large transaction datasets
+* Model financial transactions as a network graph
+* Identify abnormal flow of funds
+* Score accounts by suspicious behavior
+* Detect mule accounts and transaction chains
+* Provide structured detection results through API
+
+---
+
+##  System Architecture
+
+The application follows a **3-layer architecture**:
+
+### 1. Frontend (Vue.js)
+
+Responsible for user interaction:
+
+* Upload single CSV file
+* Upload multiple CSV files (folder)
+* Trigger detection
+* Display results
+
+### 2. Backend (FastAPI)
+
+Responsible for processing:
+
+* File handling
+* Data validation
+* Graph building
+* Risk computation
+* Pattern detection
+
+### 3. Detection Engine
+
+Responsible for intelligence:
+
+* Transaction modeling
+* Feature extraction
+* Suspicious behavior scoring
+
+---
+
+### Architecture Flow
 
 ```
-               ┌────────────────────┐
-               │      Frontend      │
-               │      (Vue.js)      │
-               │ File Upload UI     │
-               └──────────┬─────────┘
-                          │ API Call
-                          ▼
-               ┌────────────────────┐
-               │  Backend (FastAPI) │
-               │ - CSV Validation   │
-               │ - Data Cleaning    │
-               │ - Graph Builder    │
-               │ - Risk Engine      │
-               └──────────┬─────────┘
-                          ▼
-               ┌────────────────────┐
-               │ Detection Results  │
-               │ - Risk Scores      │
-               │ - Suspicious Nodes │
-               │ - Transaction Flow │
-               └────────────────────┘
+User Upload → FastAPI Server → Data Processing → Graph Construction → Risk Engine → Detection Results
 ```
 
 ---
 
-# 🔄 Slide 4 – Detection Workflow
+## ⚙️ Technologies Used
 
-### Use: Step-by-Step Flowchart
+### Backend
 
-```
-1. CSV Validation
-        ↓
-2. Data Cleaning
-        ↓
-3. Time Window Creation
-        ↓
-4. Graph Construction
-        ↓
-5. Feature Engineering
-        ↓
-6. Risk Scoring (Sigmoid)
-        ↓
-7. Pattern Identification
-        ↓
-8. JSON Response Output
-```
+* Python
+* FastAPI
+* Pandas
+* NumPy
+* NetworkX
 
-Add small explanation bullets on the side.
+### Frontend
+
+* Vue.js
+* JavaScript
+* Axios (API communication)
+
+### Data Processing
+
+* CSV parsing
+* Time window aggregation
+* Network graph modeling
 
 ---
 
-# 🕸 Slide 5 – Graph Construction Logic
-
-### Use: Network Diagram Illustration
-
-Draw circles representing accounts:
+## 📂 Repository Structure
 
 ```
-A → B → C → D
-      ↘
-        E
+Money_muling/
+│
+├── backend/
+│   ├── routers/           # API endpoints
+│   ├── main_engine/       # detection engine
+│   ├── build_graph.py     # transaction graph construction
+│   ├── detect.py          # detection logic
+│   └── utils.py           # helper functions
+│
+├── frontend/              # Vue.js interface
+│
+├── .gitignore
+└── README.md
 ```
-
-Explain:
-
-* Each account = Node
-* Each transaction = Edge
-* Edge weight = Transaction amount
-* Time window = Edge grouping
-
-Mention:
-
-* Circular chains
-* Rapid fund movement
-* Intermediary accounts
 
 ---
 
-# 📊 Slide 6 – Risk Scoring Model
+## 🚀 Installation & Setup
 
-### Use: Block + Formula Slide
+### 1️⃣ Clone Repository
 
+```bash
+git clone https://github.com/VishalLa/Money_muling.git
+cd Money_muling
 ```
-Features Extracted:
-- In-degree
-- Out-degree
-- Total Inflow
-- Total Outflow
-- Flow Ratio
-- Time Frequency
-```
-
-Then:
-
-```
-Risk Score = Sigmoid(Weighted Features)
-```
-
-Explain:
-
-* Normalization applied
-* Higher score → Higher suspicion
 
 ---
 
-# 🚨 Slide 7 – Suspicious Patterns Detected
+### 2️⃣ Create Virtual Environment
 
-### Use: 3 Mini Graphs Side by Side
+```bash
+python -m venv venv
+```
 
-1️⃣ Circular Transactions
+**Windows**
+
+```
+venv\Scripts\activate
+```
+
+**Linux/Mac**
+
+```
+source venv/bin/activate
+```
+
+---
+
+### 3️⃣ Install Dependencies
+
+```
+pip install -r requirements.txt
+```
+
+---
+
+### 4️⃣ Run Backend Server
+
+```
+uvicorn backend.main:app --reload
+```
+
+Server will run at:
+
+```
+http://127.0.0.1:8000
+```
+
+Swagger Documentation:
+
+```
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## 📤 API Endpoint
+
+### Detect Suspicious Accounts
+
+**POST** `/detect`
+
+Accepts:
+
+* One CSV file
+* Multiple CSV files
+
+Returns:
+
+* Suspicious accounts
+* Risk scores
+* Transaction clusters
+
+---
+
+## 📄 Expected Input Format
+
+| sender | receiver | amount | timestamp           |
+| ------ | -------- | ------ | ------------------- |
+| A101   | B302     | 15000  | 2024-01-01 12:30:00 |
+
+**Fields:**
+
+* `sender` → Account ID transferring money
+* `receiver` → Account receiving money
+* `amount` → Transaction value
+* `timestamp` → Date & time of transaction
+
+---
+
+## 🔍 Detection Methodology
+
+The system follows a multi-stage detection pipeline.
+
+### 1. Data Validation
+
+* Check CSV structure
+* Remove invalid records
+
+### 2. Data Cleaning
+
+* Handle missing values
+* Convert timestamps
+* Normalize data types
+
+### 3. Time Window Creation
+
+Transactions are grouped into rolling time windows to detect rapid movement of funds.
+
+---
+
+### 4. Graph Construction
+
+Each transaction dataset is converted into a network:
+
+* Account → Node
+* Transaction → Directed Edge
+* Amount → Edge weight
+
+This allows relationship-based analysis.
+
+---
+
+### 5. Feature Engineering
+
+For each account:
+
+* In-degree (incoming transactions)
+* Out-degree (outgoing transactions)
+* Total inflow
+* Total outflow
+* Flow ratio
+* Transaction frequency
+
+---
+
+### 6. Risk Scoring
+
+A normalized feature vector is computed and transformed into a risk score using a sigmoid function:
+
+```
+Risk Score = 1 / (1 + e^(-x))
+```
+
+Higher score → higher suspicion.
+
+---
+
+### 7. Pattern Detection
+
+The engine identifies common mule behaviors:
+
+• Rapid fund movement
+• Circular transfers
+• Intermediate accounts
+• High fan-in/fan-out nodes
+• Short-time chained transfers
+
+---
+
+## 🚨 Suspicious Patterns Detected
+
+### Circular Transactions
 
 ```
 A → B → C → A
 ```
 
-2️⃣ Rapid Transfers
+### Layering Chain
 
 ```
-A → B → C → D (within minutes)
+A → B → C → D → E
 ```
 
-3️⃣ Hub Account
+### Hub Account
 
 ```
       B
@@ -180,73 +315,37 @@ A →   X   → C
       D
 ```
 
-Explain:
-
-* Mule accounts often act as temporary hubs
+These patterns indicate possible laundering networks.
 
 ---
 
-# 🧰 Slide 8 – Technology Stack
+## 📊 Output
 
-Use simple 2-column layout:
+The system produces a JSON response:
 
-### Backend
-
-* FastAPI
-* Python
-* Pandas
-* NumPy
-* NetworkX
-
-### Frontend
-
-* Vue.js
-* Axios
-* File Upload UI
+* List of suspicious accounts
+* Risk score per account
+* Transaction summary
 
 ---
 
-# 📈 Slide 9 – Scalability
+## 📈 Scalability
 
-Use block diagram:
+The system is designed for:
 
-```
-Large CSV Files
-        ↓
-Efficient Pandas Processing
-        ↓
-Optimized Graph Building
-        ↓
-Modular Risk Engine
-```
-
-Mention:
-
-* Handles 10k–50k+ transactions
-* Modular design
-* Easy ML integration
+* 10,000 – 50,000+ transactions
+* Modular processing
+* Extensible detection engine
 
 ---
 
-# 🔮 Slide 10 – Future Improvements
+## 🔮 Future Improvements
 
-Use icons or blocks:
-
-* Machine Learning Anomaly Detection
-* Real-Time Monitoring
-* Database Integration
-* Cloud Deployment
-* Dashboard Analytics
-
----
-
-# 🎁 BONUS – If You Want It More Professional
-
-Use these PowerPoint SmartArt types:
-
-* Process → Basic Process (for workflow)
-* Hierarchy → Layered Architecture
-* Relationship → Radial Diagram (for graph logic)
-* Cycle → For circular pattern slide
+* Machine Learning anomaly detection
+* Real-time transaction monitoring
+* Database integration (PostgreSQL)
+* Authentication system
+* Dashboard analytics
+* Cloud deployment
 
 ---
