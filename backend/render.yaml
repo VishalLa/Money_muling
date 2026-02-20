@@ -1,6 +1,0 @@
-services:
-  - type: web
-    name: money-muling-api
-    env: python
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: cd backend && bash start.sh
