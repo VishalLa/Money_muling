@@ -16,5 +16,6 @@ export default defineConfig({
       '/show':  'http://localhost:8000',
       '/download': 'http://localhost:8000'
     }
-  }
+  },
+  base: "/Money_muling/"
 })

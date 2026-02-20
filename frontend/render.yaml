@@ -1,0 +1,4 @@
+- type: static
+    name: money-muling-frontend
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
