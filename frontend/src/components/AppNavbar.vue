@@ -40,7 +40,6 @@ const tabs = [
   { to: '/',        label: 'Home' },
   { to: '/graph',   label: 'Graph' },
   { to: '/summary', label: 'Summary Table' },
-  { to: '/charts',  label: 'Analytics' }
 ]
 
 // Inline icon component

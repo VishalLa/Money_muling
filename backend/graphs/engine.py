@@ -328,41 +328,6 @@ class MainEngine:
             .reset_index(drop=True)
         )
     
-
-    def evaluate_model(self, scores: dict):
-        if "is_fraud" not in self._df.columns:
-            return None, None
-
-        actual = (
-            self._df.groupby("sender_id")["is_fraud"]
-            .max()
-            .reindex(self._accounts, fill_value=0)
-            .values
-        )
-
-        score_values = np.array([scores[a] for a in self._accounts])
-
-        # Find optimal threshold via PR curve
-        precision_arr, recall_arr, thresholds = precision_recall_curve(actual, score_values)
-
-        f1_scores  = 2 * (precision_arr * recall_arr) / (precision_arr + recall_arr + 1e-8)
-        best_idx   = int(np.argmax(f1_scores))
-
-        # thresholds has one fewer element than precision/recall arrays
-        best_threshold = float(thresholds[best_idx]) if best_idx < len(thresholds) else 50.0
-
-        # Apply threshold to get binary predictions
-        predicted = (score_values >= best_threshold).astype(int)
-
-        metrics = {
-            "precision":          round(precision_score(actual, predicted, zero_division=0), 4),
-            "recall":             round(recall_score(actual, predicted, zero_division=0),    4),
-            "f1_score":           round(f1_score(actual, predicted, zero_division=0),        4),
-            "accuracy":           round(accuracy_score(actual, predicted),                   4),
-            "optimal_threshold":  round(best_threshold, 2),
-        }
-
-        return metrics, best_threshold
     
 
     def _build_reasons(
@@ -424,7 +389,6 @@ class MainEngine:
         scores    = self.compute_scores(cycles, smurfing, shells)
         threshold = self.adaptive_threshold(scores)
         rings     = self.build_fraud_rings(cycles, smurfing, shells, scores)
-        metrics, best_threshold = self.evaluate_model(scores=scores)
 
 
         account_meta: dict = defaultdict(lambda: {"patterns": set(), "ring_id": None})
@@ -451,14 +415,10 @@ class MainEngine:
             })
 
 
-        # ── evaluate model if ground truth available ──
-        eval_metrics, _ = self.evaluate_model(scores)
-
         return {
             "suspicious_accounts": suspicious,
             "fraud_rings":         rings,
             "account_scores":      scores,
-            "eval_metrics":        metrics,      # ← None if no is_fraud column
             "summary": {
                 "total_accounts_analyzed":     len(self._accounts),
                 "suspicious_accounts_flagged": len(suspicious),

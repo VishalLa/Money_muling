@@ -124,9 +124,8 @@ let panStart     = { x: 0, y: 0 }
 let touchDist    = 0
 
 const LAYOUTS = [
-  { v: 'force',  label: 'Force'    },
-  { v: 'circle', label: 'Radial'   },
-  { v: 'grid',   label: 'Grid'     }
+  { v: 'force', label: 'Force' },
+  { v: 'grid',  label: 'Grid'  }
 ]
 
 const PATTERN_LABELS = {
@@ -497,29 +496,6 @@ function onTouchEnd() { isPanning = false }
 function computePositions(nodes, edges, W, H) {
   const n = nodes.length
   if (!n) return []
-
-  if (layout.value === 'circle') {
-    // Radial: ring members on inner ring, others on outer
-    const ringNodes  = nodes.filter(nd => nd.ring)
-    const otherNodes = nodes.filter(nd => !nd.ring)
-    const pos        = new Array(n)
-    const idxMap     = {}
-    nodes.forEach((nd, i) => { idxMap[nd.id] = i })
-
-    const innerR = Math.min(W, H) * 0.22
-    const outerR = Math.min(W, H) * 0.42
-    const cx = W / 2, cy = H / 2
-
-    ringNodes.forEach((nd, i) => {
-      const a = (i / Math.max(ringNodes.length, 1)) * 2 * Math.PI
-      pos[idxMap[nd.id]] = { x: cx + innerR * Math.cos(a), y: cy + innerR * Math.sin(a) }
-    })
-    otherNodes.forEach((nd, i) => {
-      const a = (i / Math.max(otherNodes.length, 1)) * 2 * Math.PI
-      pos[idxMap[nd.id]] = { x: cx + outerR * Math.cos(a), y: cy + outerR * Math.sin(a) }
-    })
-    return pos
-  }
 
   if (layout.value === 'grid') {
     const cols = Math.ceil(Math.sqrt(n))
