@@ -843,6 +843,6 @@
         "total_accounts_analyzed": 501,
         "suspicious_accounts_flagged": 48,
         "fraud_rings_detected": 15,
-        "processing_time_seconds": 0.002
+        "processing_time_seconds": 0.003
     }
 }
