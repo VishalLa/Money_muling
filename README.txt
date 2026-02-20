@@ -1,5 +1,3 @@
----
-
 #  Money Muling Detection System
 
 ### Graph-Based Suspicious Transaction Detection using FastAPI & Network Analysis
@@ -348,4 +346,3 @@ The system is designed for:
 * Dashboard analytics
 * Cloud deployment
 
----
