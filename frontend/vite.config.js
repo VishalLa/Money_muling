@@ -17,6 +17,7 @@ export default defineConfig(({ command }) => ({
       '/download': 'http://localhost:8000'
     }
   },
+<<<<<<< HEAD
   base: command === 'build' ? "/Money_muling/" : "/",
   build: {
     rollupOptions: {
@@ -24,3 +25,7 @@ export default defineConfig(({ command }) => ({
     }
   }
 }))
+=======
+  base: command === 'build' ? "/Money_muling/" : "/"
+}))
+>>>>>>> 8cf47b6849c1d335e34e7017bd9ed48e8894de07
