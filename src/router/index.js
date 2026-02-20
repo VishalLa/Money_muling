@@ -1,10 +1,10 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import HomeView    from '@/views/HomeView.vue'
 import SummaryView from '@/views/SummaryView.vue'
 import GraphView   from '@/views/GraphView.vue'
 
 export default createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes: [
     { path: '/',        name: 'home',    component: HomeView    },
     { path: '/summary', name: 'summary', component: SummaryView },
