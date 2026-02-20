@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [vue()],
   resolve: {
     alias: {
@@ -17,5 +17,5 @@ export default defineConfig({
       '/download': 'http://localhost:8000'
     }
   },
-  base: "/Money_muling/"
-})
+  base: command === 'build' ? "/Money_muling/" : "/"
+}))
