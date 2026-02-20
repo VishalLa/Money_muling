@@ -2,5 +2,5 @@ services:
   - type: web
     name: money-muling-api
     env: python
-    buildCommand: pip install -r req.txt
+    buildCommand: pip install -r requirements.txt
     startCommand: bash start.sh
